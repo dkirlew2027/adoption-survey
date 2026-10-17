@@ -79,7 +79,11 @@ section{background:var(--card); border:1px solid var(--rule); border-radius:12px
 .opt:hover{border-color:var(--acc)}
 .opt input{margin:2px 0 0; accent-color:var(--acc); flex:none}
 .opt.on{border-color:var(--acc); background:var(--accsoft)}
-.row2{display:flex; flex-wrap:wrap; gap:7px}
+/* .opts above sets flex-direction:column, so a side-by-side group has
+   to put it back. Without this the flex-basis below is read down the
+   column instead of across it and every Yes/No box grows to 150px
+   TALL. */
+.row2{display:flex; flex-direction:row; flex-wrap:wrap; gap:7px; align-items:stretch}
 .row2 .opt{width:auto; flex:1 1 150px}
 input[type=text],input[type=email],textarea{
   width:100%; font:inherit; font-size:.92rem; color:inherit; background:var(--bg);
