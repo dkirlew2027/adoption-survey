@@ -1,0 +1,1045 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Medical Product Adoption Criteria Survey</title>
+<style>
+/* One file, no outside requests, no server and no database. Nothing is
+   posted anywhere: the respondent ends up holding their own answers as
+   a file and sends it back by whatever means they already use. */
+:root{
+  --bg:#F7FAFD; --card:#FFFFFF; --ink:#11212B; --mut:#55707F; --faint:#7A94A3;
+  --rule:#CFE0EE; --rule2:#E6EFF7; --acc:#005587; --accsoft:#DAEBFE;
+  --deep:#003B5C; --gold:#FFD100; --goldedge:#FFB81C;
+  --ok:#1B5E3A; --oksoft:#E4F2EA; --bad:#9C1C13; --badsoft:#FBE3E0;
+  --chip:#EDF4FA; --shadow:0 1px 2px rgba(0,59,92,.06),0 4px 16px rgba(0,59,92,.07);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#07151F; --card:#102532; --ink:#EAF3FA; --mut:#9FBACB; --faint:#7E9AAC;
+    --rule:#23455A; --rule2:#1A3444; --acc:#8BB8E8; --accsoft:#13344A;
+    --deep:#DAEBFE; --gold:#FFC72C; --goldedge:#FFD100;
+    --ok:#8FD6AC; --oksoft:#13291E; --bad:#F0A79E; --badsoft:#301A17;
+    --chip:#17303F; --shadow:0 1px 2px rgba(0,0,0,.45),0 4px 18px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#07151F; --card:#102532; --ink:#EAF3FA; --mut:#9FBACB; --faint:#7E9AAC;
+  --rule:#23455A; --rule2:#1A3444; --acc:#8BB8E8; --accsoft:#13344A;
+  --deep:#DAEBFE; --gold:#FFC72C; --goldedge:#FFD100;
+  --ok:#8FD6AC; --oksoft:#13291E; --bad:#F0A79E; --badsoft:#301A17;
+  --chip:#17303F; --shadow:0 1px 2px rgba(0,0,0,.45),0 4px 18px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:780px; margin:0 auto; padding:0 16px; padding-block:28px 56px}
+h1{font-size:1.6rem; line-height:1.2; margin:0 0 10px; text-wrap:balance;
+  letter-spacing:-.01em; color:var(--deep)}
+/* One gold stripe under the title is the whole UCLA cue. Gold is a fill
+   colour and never a text colour — against white it measures about
+   1.4:1, so anything written in it would be unreadable. */
+h1::after{content:""; display:block; width:74px; height:5px; border-radius:99px;
+  background:var(--gold); margin:12px 0 2px}
+.lede{color:var(--mut); font-size:.95rem; margin:0 0 6px}
+.meta{color:var(--faint); font-size:.82rem; margin:14px 0 0}
+.bar{position:sticky; top:env(safe-area-inset-top,0px); z-index:5;
+  background:var(--bg); padding:10px 0 8px; border-bottom:1px solid var(--rule2);
+  margin-bottom:22px}
+.barin{display:flex; align-items:center; gap:12px}
+.track{flex:1; height:5px; border-radius:99px; background:var(--chip); overflow:hidden}
+.fill{height:100%; width:0; border-radius:99px; transition:width .25s ease;
+  background:linear-gradient(90deg,var(--acc),var(--gold))}
+.count{font-size:.8rem; color:var(--mut); font-variant-numeric:tabular-nums; white-space:nowrap}
+section{background:var(--card); border:1px solid var(--rule); border-radius:12px;
+  padding:18px 18px 14px; margin:0 0 18px; box-shadow:var(--shadow)}
+.sh{display:flex; align-items:baseline; gap:10px; margin:0 0 4px}
+.sh h2{font-size:1.05rem; margin:0; letter-spacing:-.005em; color:var(--deep)}
+.sh .n{font-size:.72rem; font-weight:700; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--acc); background:var(--accsoft); padding:3px 8px; border-radius:99px}
+.sub{color:var(--mut); font-size:.88rem; margin:0 0 14px}
+.q{padding:14px 0; border-top:1px solid var(--rule2)}
+.q:first-of-type{border-top:0; padding-top:4px}
+.qlab{display:block; font-weight:600; margin:0 0 9px; font-size:.97rem; color:var(--deep)}
+.qlab .code{color:var(--faint); font-weight:700; font-size:.78rem; margin-right:7px;
+  letter-spacing:.04em}
+.req{color:var(--acc); font-weight:700}
+.opts{display:flex; flex-direction:column; gap:7px}
+.opt{display:flex; gap:10px; align-items:flex-start; padding:9px 11px;
+  border:1px solid var(--rule); border-radius:9px; cursor:pointer; background:transparent;
+  font-size:.92rem; line-height:1.35; text-align:left; color:inherit; width:100%}
+.opt:hover{border-color:var(--acc)}
+.opt input{margin:2px 0 0; accent-color:var(--acc); flex:none}
+.opt.on{border-color:var(--acc); background:var(--accsoft)}
+.row2{display:flex; flex-wrap:wrap; gap:7px}
+.row2 .opt{width:auto; flex:1 1 150px}
+input[type=text],input[type=email],textarea{
+  width:100%; font:inherit; font-size:.92rem; color:inherit; background:var(--bg);
+  border:1px solid var(--rule); border-radius:8px; padding:9px 10px}
+/* iOS zooms the whole page when a focused field is under 16px and never
+   zooms back out, which reads as the page breaking. Full size on small
+   screens, and the buttons get thumb-sized at the same time. */
+@media (max-width:640px){
+  input[type=text],input[type=email],textarea{font-size:16px}
+  .btn{font-size:1rem; padding:13px 18px; min-height:48px; width:100%;
+       justify-content:center}
+  .btns{gap:10px}
+  .btns .said{text-align:center; width:100%}
+  .opt{padding:12px 13px; min-height:46px; align-items:center}
+}
+input:focus,textarea:focus,.opt:focus-visible,button:focus-visible{
+  outline:2px solid var(--acc); outline-offset:1px}
+textarea{min-height:76px; resize:vertical; line-height:1.45}
+.spec{margin-top:8px}
+.spec[hidden]{display:none!important}
+/* ---- Q1: tap three, in order ---- */
+.ranks{display:flex; flex-direction:column; gap:8px; margin:0 0 12px}
+.fcard{display:flex; gap:12px; align-items:flex-start; width:100%; text-align:left;
+  padding:11px 13px; border:1px solid var(--rule); border-radius:10px; cursor:pointer;
+  background:transparent; color:inherit; font:inherit}
+.fcard:hover{border-color:var(--acc)}
+.fcard.on{border-color:var(--acc); background:var(--accsoft)}
+.badge{flex:none; width:26px; height:26px; border-radius:99px; border:1px dashed var(--rule);
+  display:grid; place-items:center; font-size:.8rem; font-weight:700; color:var(--faint);
+  font-variant-numeric:tabular-nums}
+/* The rank badge is where gold earns its keep: a gold disc with the
+   numeral in darkest blue, which holds up in both themes. */
+.fcard.on .badge{background:var(--gold); border:0; color:#003B5C; font-size:.85rem;
+  box-shadow:0 0 0 1px var(--goldedge)}
+.fname{font-weight:600; font-size:.95rem; display:block; margin-bottom:2px}
+.fdesc{color:var(--mut); font-size:.85rem; line-height:1.4}
+.pickstate{font-size:.86rem; color:var(--mut); margin:0 0 12px}
+.multinote{font-size:.86rem; color:var(--mut); margin:0 0 9px}
+.pickstate b{color:var(--ink)}
+.err{display:none; margin-top:8px; padding:8px 10px; border-radius:8px;
+  background:var(--badsoft); color:var(--bad); font-size:.85rem; font-weight:600}
+.err.on{display:block}
+.q.bad{background:linear-gradient(var(--badsoft),var(--badsoft)) no-repeat; border-radius:8px;
+  padding-left:10px; padding-right:10px}
+/* ---- buttons ---- */
+.btn{font:inherit; font-size:.92rem; font-weight:600; padding:10px 16px; border-radius:9px;
+  border:1px solid var(--rule); background:var(--card); color:inherit; cursor:pointer}
+.btn:hover{border-color:var(--acc)}
+.btn.main{background:var(--acc); border-color:var(--acc); color:#fff}
+.btn.main:hover{background:var(--deep); border-color:var(--deep)}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .btn.main{color:#07151F}
+  :root:not([data-theme="light"]) .btn.main:hover{background:#DAEBFE; border-color:#DAEBFE}
+}
+:root[data-theme="dark"] .btn.main{color:#07151F}
+:root[data-theme="dark"] .btn.main:hover{background:#DAEBFE; border-color:#DAEBFE}
+.btns{display:flex; flex-wrap:wrap; gap:9px; align-items:center}
+.said{font-size:.85rem; color:var(--ok); font-weight:600}
+/* ---- done panel ---- */
+.done{border-color:var(--ok)}
+.done h2{color:var(--ok)}
+.tiny{font-size:.82rem; color:var(--mut)}
+#teampanel{border-color:var(--acc)}
+#teampanel .n{color:var(--acc)}
+.saved{margin-top:12px; padding:10px 12px; border-radius:9px; background:var(--oksoft);
+  color:var(--ok); font-size:.9rem; line-height:1.45}
+.saved.warn{background:var(--accsoft); color:var(--acc)}
+.saved .fname2{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:.86em; background:var(--card); padding:1px 5px; border-radius:4px;
+  border:1px solid var(--rule)}
+.sendto{margin-top:12px; padding:11px 13px; border:1px solid var(--rule);
+  border-left:4px solid var(--gold);
+  border-radius:9px; display:flex; flex-wrap:wrap; align-items:center; gap:9px;
+  background:var(--chip)}
+.sendlab{font-size:.8rem; text-transform:uppercase; letter-spacing:.07em;
+  color:var(--faint); font-weight:700}
+.addr{font-weight:700; color:var(--acc); word-break:break-all; font-size:.95rem;
+  text-decoration:none}
+.addr:hover{text-decoration:underline}
+.btn.small{font-size:.82rem; padding:6px 11px; min-height:0}
+@media (max-width:640px){
+  .sendto{flex-direction:column; align-items:flex-start}
+  .btn.small{font-size:.95rem; padding:11px 14px; min-height:44px; width:100%}
+}
+.linky{background:none; border:0; padding:0; font:inherit; color:var(--acc);
+  text-decoration:underline; cursor:pointer}
+table.sum{width:100%; border-collapse:collapse; font-size:.86rem; margin-top:12px}
+table.sum th,table.sum td{text-align:left; padding:6px 8px; border-bottom:1px solid var(--rule2)}
+table.sum th{font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; color:var(--faint)}
+table.sum td.n{text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap}
+.pill{display:inline-block; padding:1px 7px; border-radius:99px; font-size:.74rem;
+  font-weight:700; background:var(--chip); color:var(--mut)}
+.pill.hi{background:var(--accsoft); color:var(--acc)}
+@media print{
+  .bar,.btns,#teampanel,.pickstate,.saved,#fallbackwrap{display:none}
+  .sendto{border:1px solid #999; background:none}
+  section{box-shadow:none; break-inside:avoid}
+  body{background:#fff}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Survey for Medical Product Adoption Criteria</h1>
+<p class="lede">I am an MBA student at UCLA Anderson. My capstone team is working on a
+medical device, and we are gathering primary research on what actually drives adoption of
+a new medical product.</p>
+<p class="lede">The study is on a device, but the question is the same in pharma,
+diagnostics, digital health, etc.</p>
+
+<div class="bar"><div class="barin">
+  <div class="track"><div class="fill" id="fill"></div></div>
+  <div class="count" id="count">0 of 6 answered</div>
+</div></div>
+
+<form id="form" novalidate>
+
+<!-- ================================================= screener -->
+<section>
+  <div class="sh"><span class="n">Part 1</span><h2>About you</h2></div>
+  <p class="sub">Four quick facts, so we can read your answers in context. No names, no
+  company.</p>
+
+  <div class="q" data-q="s1_field">
+    <span class="qlab"><span class="code">S1</span>Which part of the health industry have
+      you spent most of your career in? <span class="req">*</span></span>
+    <div class="opts" data-radio="s1_field"></div>
+    <div class="spec" hidden data-spec="s1_field">
+      <input type="text" id="s1a" placeholder="Which industry?" autocomplete="off">
+    </div>
+    <div class="err">Please choose one.</div>
+  </div>
+
+  <div class="q" data-q="s2_role">
+    <span class="qlab"><span class="code">S2</span>Which best describes your role?
+      <span class="req">*</span></span>
+    <div class="opts" data-radio="s2_role"></div>
+    <div class="spec" hidden data-spec="s2_role">
+      <input type="text" id="s2a" placeholder="What is your role?" autocomplete="off">
+    </div>
+    <div class="err">Please choose one.</div>
+  </div>
+
+  <div class="q" data-q="s3_products">
+    <span class="qlab"><span class="code">S3</span>How many medical products — devices,
+      drugs, diagnostics, software — have you been close to as they went from development
+      to market? <span class="req">*</span></span>
+    <div class="opts row2" data-radio="s3_products"></div>
+    <div class="err">Please choose one.</div>
+  </div>
+
+  <div class="q" data-q="s4_years">
+    <span class="qlab"><span class="code">S4</span>How many years have you worked in the
+      health industry? <span class="req">*</span></span>
+    <div class="opts row2" data-radio="s4_years"></div>
+    <div class="err">Please choose one.</div>
+  </div>
+</section>
+
+<!-- ================================================= Q1 -->
+<section>
+  <div class="sh"><span class="n">Part 2</span><h2>The main question</h2></div>
+  <p class="sub">Of the eight below, which three do the most to decide whether a new
+  medical product actually gets adopted?</p>
+  <div class="q" data-q="q1" style="padding-top:0">
+    <p class="pickstate" id="pickstate">Tap <b>three</b> factors, best first.</p>
+    <div class="ranks" id="ranks"></div>
+    <div class="err">Please pick exactly three.</div>
+  </div>
+</section>
+
+<!-- ================================================= Q2, Q3 -->
+<section>
+  <div class="sh"><span class="n">Part 3</span><h2>Two more, then you are done</h2></div>
+
+  <div class="q">
+    <span class="qlab"><span class="code">Q2</span>Is there a factor that decides adoption
+      that is not on that list? If so, what is it?</span>
+    <textarea id="q2" placeholder="Optional."></textarea>
+  </div>
+
+  <div class="q" data-q="q3_killer">
+    <span class="qlab"><span class="code">Q3</span>Think of a product you have seen that
+      was clinically sound and still failed to get adopted. Which factors did the most to
+      stop it? <span class="req">*</span></span>
+    <p class="multinote"></p>
+    <div class="opts" data-radio="q3_killer"></div>
+    <div class="spec" hidden data-spec="q3_killer">
+      <input type="text" id="q3a" placeholder="What was it?" autocomplete="off">
+    </div>
+    <div class="err">Please choose at least one.</div>
+  </div>
+</section>
+
+<!-- ================================================= close -->
+<section>
+  <div class="sh"><span class="n">Part 4</span><h2>Before you go</h2></div>
+
+  <div class="q">
+    <span class="qlab"><span class="code">Q4</span>Would you be willing to spend twenty
+      minutes on a call? We are speaking to a small number of people in more depth.</span>
+    <div class="opts row2" data-radio="q4_call"></div>
+    <div class="spec" hidden data-spec="q4_call">
+      <input type="email" id="q4email" placeholder="Your email" autocomplete="email">
+    </div>
+  </div>
+
+  <div class="q" style="border-top:1px solid var(--rule2)">
+    <div class="btns">
+      <button type="submit" class="btn main">Finish and show my answers</button>
+      <span class="tiny" id="submitnote">Nothing is sent until you send it yourself.</span>
+    </div>
+  </div>
+</section>
+
+</form>
+
+<!-- ================================================= done -->
+<section class="done" id="donepanel" hidden>
+  <div class="sh"><span class="n">Done</span><h2>Thank you — that is everything</h2></div>
+  <p class="sub">Save your answers as a file and send it to the address below. Nothing
+  has been transmitted and nothing will be.</p>
+  <div class="btns">
+    <button type="button" class="btn main" id="savebtn">Save my answers</button>
+    <button type="button" class="btn" id="mailbtn" hidden>Open an email</button>
+    <button type="button" class="btn" id="backbtn">Change an answer</button>
+  </div>
+  <div class="saved" id="saved" hidden></div>
+  <div class="sendto" id="sendto" hidden>
+    <span class="sendlab">Send it to</span>
+    <a class="addr" id="addrlink" href="#"><span id="addr"></span></a>
+    <button type="button" class="btn small" id="copyaddr">Copy address</button>
+    <span class="said" id="said3" hidden>Copied.</span>
+  </div>
+  <p class="tiny" id="fallbackwrap" style="margin-top:10px">
+    Nothing happened, or you cannot find the file?
+    <button type="button" class="linky" id="showtext">Show my answers instead</button>
+    — then copy them into your reply.
+  </p>
+  <div id="textwrap" hidden>
+    <textarea id="plaintext" readonly rows="12" style="margin-top:4px"></textarea>
+    <div class="btns" style="margin-top:8px">
+      <button type="button" class="btn" id="copyfallback">Copy my answers</button>
+      <span class="said" id="said" hidden>Copied.</span>
+    </div>
+  </div>
+  <p class="meta">Nothing identifying is collected unless you chose to give it above,
+  and your answers are reported only in aggregate.</p>
+</section>
+
+<!-- ============ team panel: no entry point on the page. Opened with
+     #team on the address, or by typing the word "team". ============ -->
+<section id="teampanel" hidden>
+  <div class="sh"><span class="n">Team only</span><h2>Combine the responses</h2></div>
+  <p class="sub">Drop in the files people sent back, or paste their contents. You get a
+  tally and a block to paste into row 5 of the Responses tab. Runs entirely in this page.</p>
+  <p class="tiny"><label class="btn" style="display:inline-block">Choose the files people sent
+    <input type="file" id="files" accept=".txt,.json,text/plain,application/json" multiple hidden></label></p>
+  <textarea id="inbox" style="min-height:110px" placeholder="…or paste their contents here."></textarea>
+  <div class="btns" style="margin-top:10px">
+    <button type="button" class="btn main" id="combine">Combine</button>
+    <button type="button" class="btn" id="copytsv" hidden>Copy for the workbook</button>
+    <button type="button" class="btn" id="copyall" hidden>Copy merged JSON</button>
+    <button type="button" class="btn" id="dlall" hidden>Download merged JSON</button>
+    <button type="button" class="btn" id="closeteam">Close</button>
+    <span class="said" id="said2" hidden>Copied.</span>
+  </div>
+  <div id="sumout"></div>
+</section>
+
+</div>
+<script>
+(function(){
+  "use strict";
+  var DEVICE = "Medical devices";
+
+  /* The eight factors, in the order the scorecard locks them. The weight
+     is carried here only so the combine view can show the tier split —
+     respondents never see it. */
+  var FACTORS = [
+    ["Unmet clinical need",
+     "How much the current standard of care leaves unsolved for the patient.", 15],
+    ["Market size", "How many patients could be treated.", 10],
+    ["Regulatory complexity",
+     "How hard and how long the path to clearance or approval is.", 15],
+    ["Reimbursement potential",
+     "Whether a paying code exists, what it pays, and in which site of care.", 15],
+    ["Customer access and adoption",
+     "Whether the buyer can be reached, and whether the prescriber or user will change their practice.", 10],
+    ["Technical feasibility",
+     "Whether the company can actually make it with what it already has.", 15],
+    ["Strategic fit",
+     "How well the opportunity fits the company's existing technology and focus.", 10],
+    ["Competitive landscape",
+     "Who else is solving the problem, and how entrenched they are.", 10]
+  ];
+  var FNAMES = FACTORS.map(function(f){ return f[0]; });
+  var OTHER_FIELD = "Other — please specify";
+  var OTHER_ROLE = "Other — please specify";
+  var SOMETHING = "Something else — please specify";
+
+  var LISTS = {
+    s1_field: [DEVICE, "Pharmaceuticals or biotech", "Diagnostics or laboratory",
+      "Digital health or health IT", "Hospital or health system (provider side)",
+      "Payer or health plan", "Consulting, investment or academia", OTHER_FIELD],
+    s2_role: ["Regulatory affairs or quality", "Clinical affairs or medical",
+      "Market access or reimbursement", "Commercial, sales or marketing",
+      "R&D, engineering or manufacturing", "Business development or strategy",
+      "Investor", "Founder or general management", OTHER_ROLE],
+    s3_products: ["0", "1", "2–3", "4–9", "10 or more"],
+    s4_years: ["Under 3 years", "3 to under 8 years", "8 to under 15 years",
+      "15 years or more"],
+    q3_killer: FNAMES.concat([SOMETHING, "I have not seen one"]),
+    q4_call: ["Yes", "No"]
+  };
+  /* Questions where more than one answer is honest. A person who watched
+     a good product die rarely blames one thing, and forcing a single
+     pick throws away the combination, which is usually the finding. */
+  var MULTI = { q3_killer: 3 };
+  /* Which answer opens a follow-up line, and what that line is for. */
+  var SPECIFY = {
+    s1_field: OTHER_FIELD, s2_role: OTHER_ROLE, q3_killer: SOMETHING,
+    q4_call: "Yes"
+  };
+  var REQUIRED = ["s1_field", "s2_role", "s3_products", "s4_years", "q1", "q3_killer"];
+
+  /* ---- where replies go ----
+     This page is published publicly, so the address is deliberately not
+     written anywhere in the source. A harvester reading the HTML finds
+     no at-sign, no dotted domain and no mail link to match on — just a
+     list of numbers. The address is assembled when the page runs, which
+     costs a respondent nothing.
+
+     Be clear about what this does and does not do: it defeats the
+     regex scrapers that trawl public repositories, which is nearly all
+     of them. Anything that executes JavaScript can still read it. This
+     raises the cost of harvesting; it does not make the address
+     private.
+
+     To change the address, open any browser console, put the new
+     address between the quotes below and run it, then paste the result
+     over the numbers that follow:
+       [...'PUT THE ADDRESS HERE'].map(function(c){
+          return c.charCodeAt(0); }).join(',')
+     Or set SEND_TO_PLAIN just below and skip the encoding, accepting
+     that the address is then sitting in the source in plain sight. */
+  var SEND_TO_CODES = [
+    100, 97, 118, 105, 100, 46, 107, 105, 114, 108, 101, 119, 46, 50,
+    48, 50, 55, 64, 97, 110, 100, 101, 114, 115, 111, 110, 46, 117,
+    99, 108, 97, 46, 101, 100, 117
+  ];
+  var SEND_TO_PLAIN = "";
+  var SEND_TO = SEND_TO_PLAIN || SEND_TO_CODES.map(function (c) {
+    return String.fromCharCode(c);
+  }).join("");
+
+  var answers = {};        // name -> chosen label
+  var picks = [];          // Q1, in rank order
+  var started = Date.now();
+  var finished = null;     // the completed response, once they submit
+
+  function $(id){ return document.getElementById(id); }
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){
+      return ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" })[c];
+    });
+  }
+
+  /* ---------------------------------------------- choices */
+  var chosen = {};    // multi-select questions: name -> [labels], in tap order
+
+  function syncSpec(name){
+    var spec = document.querySelector('[data-spec="' + name + '"]');
+    if (!spec) return;
+    var want = MULTI[name]
+      ? (chosen[name] || []).indexOf(SPECIFY[name]) > -1
+      : answers[name] === SPECIFY[name];
+    spec.hidden = !want;
+    if (!want) { var inp = spec.querySelector("input"); if (inp) inp.value = ""; }
+  }
+
+  Object.keys(LISTS).forEach(function(name){
+    var host = document.querySelector('[data-radio="' + name + '"]');
+    if (!host) return;
+    var cap = MULTI[name] || 0;
+    if (cap) chosen[name] = [];
+    LISTS[name].forEach(function(label, i){
+      var id = name + "_" + i;
+      var lab = document.createElement("label");
+      lab.className = "opt";
+      lab.innerHTML = '<input type="' + (cap ? "checkbox" : "radio") + '" name="' + name +
+                      '" id="' + id + '" value="' + esc(label) + '"><span>' +
+                      esc(label) + "</span>";
+      host.appendChild(lab);
+      lab.querySelector("input").addEventListener("change", function(){
+        if (cap) {
+          var list = chosen[name], at = list.indexOf(label);
+          if (this.checked) {
+            if (at < 0) list.push(label);
+            if (list.length > cap) {
+              /* Over the cap: drop the oldest rather than refuse the tap,
+                 so the box they just ticked is the one that stays. */
+              var dropped = list.shift();
+              var box = host.querySelector('input[value="' +
+                        dropped.replace(/"/g, '\\"') + '"]');
+              if (box) box.checked = false;
+            }
+          } else if (at > -1) list.splice(at, 1);
+          answers[name] = list.length ? list.join("; ") : "";
+          paintMulti(name, host, cap);
+        } else {
+          answers[name] = label;
+        }
+        Array.prototype.forEach.call(host.querySelectorAll(".opt"), function(o){
+          o.classList.toggle("on", o.querySelector("input").checked);
+        });
+        syncSpec(name);
+        clearErr(name);
+        tick();
+      });
+    });
+    if (cap) paintMulti(name, host, cap);
+  });
+
+  function paintMulti(name, host, cap){
+    var n = (chosen[name] || []).length;
+    var note = host.parentNode.querySelector(".multinote");
+    if (!note) return;
+    note.textContent = n === 0
+      ? "Choose up to " + cap + "."
+      : n === cap
+        ? "That is " + cap + ". Tapping another will replace the first one you chose."
+        : n + " chosen — up to " + cap + ".";
+  }
+
+  /* ---------------------------------------------- Q1 */
+  var ranks = $("ranks");
+  FACTORS.forEach(function(f){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "fcard";
+    b.setAttribute("data-f", f[0]);
+    b.innerHTML = '<span class="badge" aria-hidden="true">·</span><span>' +
+      '<span class="fname">' + esc(f[0]) + "</span>" +
+      '<span class="fdesc">' + esc(f[1]) + "</span></span>";
+    b.addEventListener("click", function(){
+      var n = f[0], at = picks.indexOf(n);
+      if (at > -1) picks.splice(at, 1);
+      else if (picks.length < 3) picks.push(n);
+      else {
+        /* Full. Replace the third rather than refusing the tap: a dead
+           click reads as a broken page, and the respondent plainly means
+           to swap something. */
+        picks[2] = n;
+      }
+      paintPicks();
+      clearErr("q1");
+      tick();
+    });
+    ranks.appendChild(b);
+  });
+  function paintPicks(){
+    Array.prototype.forEach.call(ranks.querySelectorAll(".fcard"), function(c){
+      var at = picks.indexOf(c.getAttribute("data-f"));
+      c.classList.toggle("on", at > -1);
+      var badge = c.querySelector(".badge");
+      badge.textContent = at > -1 ? String(at + 1) : "·";
+      c.setAttribute("aria-pressed", at > -1 ? "true" : "false");
+    });
+    var left = 3 - picks.length;
+    $("pickstate").innerHTML = picks.length === 0
+      ? "Tap <b>three</b> factors, best first."
+      : picks.length === 3
+        ? "<b>1.</b> " + esc(picks[0]) + " &nbsp;·&nbsp; <b>2.</b> " + esc(picks[1]) +
+          " &nbsp;·&nbsp; <b>3.</b> " + esc(picks[2]) +
+          " &nbsp;—&nbsp; tap one again to change it."
+        : "<b>" + left + "</b> more to pick.";
+  }
+  paintPicks();
+
+  /* ---------------------------------------------- progress */
+  function done(name){
+    return name === "q1" ? picks.length === 3 : !!answers[name];
+  }
+  function tick(){
+    var n = REQUIRED.filter(done).length;
+    $("count").textContent = n + " of " + REQUIRED.length + " answered";
+    $("fill").style.width = Math.round(n / REQUIRED.length * 100) + "%";
+  }
+  tick();
+
+  function clearErr(name){
+    var q = document.querySelector('[data-q="' + name + '"]');
+    if (!q) return;
+    q.classList.remove("bad");
+    var e = q.querySelector(".err");
+    if (e) e.classList.remove("on");
+  }
+
+  /* ---------------------------------------------- submit */
+  function val(id){ var e = $(id); return e ? String(e.value || "").trim() : ""; }
+
+  function payload(){
+    return {
+      tool: "adoption-survey",
+      version: 1,
+      submittedAt: new Date().toISOString(),
+      secondsTaken: Math.round((Date.now() - started) / 1000),
+      s1_field: answers.s1_field || "",
+      s1a_other: val("s1a"),
+      s2_role: answers.s2_role || "",
+      s2a_other: val("s2a"),
+      s3_products: answers.s3_products || "",
+      s4_years: answers.s4_years || "",
+      q1_first: picks[0] || "",
+      q1_second: picks[1] || "",
+      q1_third: picks[2] || "",
+      q2_missing: val("q2"),
+      q3_killer: answers.q3_killer || "",
+      q3a_other: val("q3a"),
+      q4_call: answers.q4_call || "",
+      q4_email: val("q4email")
+    };
+  }
+
+  $("form").addEventListener("submit", function(ev){
+    ev.preventDefault();
+    var missing = REQUIRED.filter(function(n){ return !done(n); });
+    if (missing.length) {
+      missing.forEach(function(n){
+        var q = document.querySelector('[data-q="' + n + '"]');
+        if (!q) return;
+        q.classList.add("bad");
+        var e = q.querySelector(".err");
+        if (e) e.classList.add("on");
+      });
+      var first = document.querySelector('[data-q="' + missing[0] + '"]');
+      if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+      $("submitnote").textContent = missing.length === 1
+        ? "One question still needs an answer."
+        : missing.length + " questions still need an answer.";
+      return;
+    }
+    $("submitnote").textContent = "Nothing is sent until you send it yourself.";
+    finished = payload();
+    $("donepanel").hidden = false;
+    $("donepanel").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  /* What the respondent actually gets. They should never be asked to
+     look at, copy or understand JSON — so the file opens as their own
+     answers in plain English, and the machine-readable block sits at the
+     bottom under a line telling them to leave it alone. The team panel
+     reads that block straight back out. */
+  var MARK = "----- please leave everything below this line -----";
+  function readable(d){
+    var L = [];
+    L.push("MEDICAL PRODUCT ADOPTION CRITERIA — SURVEY RESPONSE");
+    L.push("Completed " + new Date(d.submittedAt).toLocaleString());
+    L.push("");
+    /* The address travels inside the file too. Someone who saves this
+       now and gets to it on Thursday will not still have the page open. */
+    L.push(SEND_TO
+      ? "Please send this file to " + SEND_TO
+      : "Please send this file back to whoever asked you to fill in the survey.");
+    L.push("");
+    L.push("YOUR ANSWERS");
+    L.push("");
+    function line(label, v){ if (String(v || "").trim()) L.push("  " + label + ": " + v); }
+    line("Industry", d.s1_field);
+    line("  specified as", d.s1a_other);
+    line("Role", d.s2_role);
+    line("  specified as", d.s2a_other);
+    line("Products taken to market", d.s3_products);
+    line("Years in the industry", d.s4_years);
+    L.push("");
+    L.push("  The three factors that most decide whether a product gets adopted:");
+    L.push("    1. " + d.q1_first);
+    L.push("    2. " + d.q1_second);
+    L.push("    3. " + d.q1_third);
+    L.push("");
+    line("A factor missing from the list", d.q2_missing);
+    line("What stopped a sound product", d.q3_killer);
+    line("  specified as", d.q3a_other);
+    L.push("");
+    line("Happy to join a 20-minute call", d.q4_call);
+    line("  email", d.q4_email);
+    L.push("");
+    L.push(MARK);
+    L.push(JSON.stringify(d));
+    return L.join("\r\n");    /* CRLF so Windows Notepad shows the breaks */
+  }
+  function fileName(d){
+    return "adoption-survey-" +
+      String(d.submittedAt).slice(0, 16).replace(/[:T]/g, "-") + ".txt";
+  }
+
+  /* Saving on a phone is not the same problem as saving on a laptop. A
+     blob download is the desktop answer; on iOS it lands somewhere the
+     person then has to go and find, and inside an email or Teams
+     in-app browser it can do nothing at all with no error. So try the
+     share sheet first where the browser offers one — that hands the
+     file straight to Mail with it already attached — fall back to the
+     download, and leave a plain-text escape hatch that cannot fail. */
+  /* A page opened straight off the device — from Files, from a mail
+     attachment, from a USB stick — runs on file://, which browsers do
+     not count as a secure context. The share sheet, the clipboard API
+     and, on iOS, saving a file are all switched off there, with no
+     error worth reading. So when that is where we are, stop pretending
+     a download will happen and put the answers on screen instead. */
+  var INSECURE = (window.isSecureContext === false) ||
+                 /^file:/i.test(window.location.protocol);
+  function canShareFile(file){
+    try {
+      return !!(file && navigator.share && navigator.canShare &&
+                navigator.canShare({ files: [file] }));
+    } catch (e) { return false; }
+  }
+  function revealText(){
+    if (!finished) return;
+    $("plaintext").value = readable(finished).replace(/\r\n/g, "\n");
+    $("textwrap").hidden = false;
+  }
+  function showSaved(name, how){
+    var msg;
+    if (how === "share") {
+      msg = "<b>Handed to your apps.</b> Pick Mail, Teams or whichever you use — " +
+            '<span class="fname2">' + esc(name) + "</span> goes with it as an " +
+            "attachment, already filled in. Send it to the address below.";
+    } else if (how === "insecure") {
+      /* Do not assert either outcome. A desktop browser opening a local
+         file usually does save it; a phone usually does not, and says
+         nothing either way. So offer the file AND the text, and let
+         them see which one happened. */
+      msg = "<b>Check for <span class=\"fname2\">" + esc(name) + "</span></b> in " +
+            "your Downloads or Files. This page was opened from the device rather " +
+            "than from a web address, and some browsers — phones especially — " +
+            "quietly block the save. Your answers are below as well: if no file " +
+            "appeared, paste that text into an email to the address below instead.";
+    } else {
+      msg = "<b>Saved.</b> Look for <span class=\"fname2\">" + esc(name) +
+            "</span> in your Downloads or Files, and attach it to an email to the address below.";
+    }
+    $("saved").innerHTML = msg;
+    $("saved").className = how === "insecure" ? "saved warn" : "saved";
+    $("saved").hidden = false;
+  }
+  $("savebtn").addEventListener("click", function(){
+    if (!finished) return;
+    var text = readable(finished), name = fileName(finished), file = null;
+    /* Must stay inside the click: a share asked for later is refused. */
+    try { file = new File([text], name, { type: "text/plain" }); } catch (e) { file = null; }
+    if (canShareFile(file)) {
+      navigator.share({ files: [file], title: "Survey answers" }).then(function(){
+        showSaved(name, "share");
+      }, function(err){
+        /* They backed out of the share sheet — not a failure, leave the
+           screen alone so the button still works. */
+        if (err && (err.name === "AbortError" || err.name === "NotAllowedError")) return;
+        download(text, name, "text/plain");
+        showSaved(name, "download");
+      });
+      return;
+    }
+    if (INSECURE) {
+      /* Try anyway — some browsers do allow it — but assume nothing and
+         show the answers at the same time, so the tap always leads
+         somewhere. */
+      try { download(text, name, "text/plain"); } catch (e) {}
+      showSaved(name, "insecure");
+      revealText();
+      $("textwrap").scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    download(text, name, "text/plain");
+    showSaved(name, "download");
+  });
+  $("showtext").addEventListener("click", function(){
+    revealText();
+    $("plaintext").scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+  $("copyfallback").addEventListener("click", function(){
+    var ta = $("plaintext");
+    ta.focus();
+    ta.setSelectionRange(0, ta.value.length);     /* long-press Copy works too */
+    copyText(ta.value, $("said"));
+  });
+  /* Where it goes. The address is shown as plain selectable text first
+     and offered as a mail link second, because a tapped mailto does
+     nothing at all in a fair number of in-app browsers and the page
+     cannot tell whether it worked. An address somebody can read, copy
+     or type never fails. */
+  function mailHref(){
+    var body = "My survey answers are attached.\r\n\r\n" +
+               "(If the file did not attach, it is saved as " +
+               (finished ? fileName(finished) : "the survey file") +
+               " — or the answers are pasted below.)\r\n\r\n";
+    return "mail" + "to:" + SEND_TO +
+      "?subject=" + encodeURIComponent("Criteria survey response") +
+      "&body=" + encodeURIComponent(body);
+  }
+  if (SEND_TO) {
+    $("addr").textContent = SEND_TO;
+    $("sendto").hidden = false;
+    $("addrlink").setAttribute("href", mailHref());
+    $("addrlink").addEventListener("click", function(){
+      this.setAttribute("href", mailHref());
+    });
+    $("copyaddr").addEventListener("click", function(){
+      copyText(SEND_TO, $("said3"));
+    });
+    var mb = $("mailbtn");
+    mb.hidden = false;
+    mb.textContent = "Open an email to send it";
+    mb.addEventListener("click", function(){
+      /* A real link click, not a location assignment: phones and some
+         desktop browsers ignore the latter from script. */
+      var a = document.createElement("a");
+      a.href = mailHref();
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    });
+  }
+
+  $("backbtn").addEventListener("click", function(){
+    $("donepanel").hidden = true;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  function flash(el){
+    el.hidden = false;
+    setTimeout(function(){ el.hidden = true; }, 1800);
+  }
+  function copyText(text, saidEl){
+    /* Some browsers refuse the clipboard outside a user gesture or over
+       a file:// origin, so there is always the select-and-copy fallback
+       rather than a silent failure. */
+    function fallback(){
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+      document.body.removeChild(ta);
+      if (ok) flash(saidEl);
+      else window.prompt("Copy this with Ctrl-C or Command-C:", text);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function(){ flash(saidEl); }, fallback);
+    } else fallback();
+  }
+  function download(text, name, type){
+    var b = new Blob([text], { type: type || "application/json" });
+    var u = URL.createObjectURL(b);
+    var a = document.createElement("a");
+    a.href = u;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(u); }, 2000);
+  }
+  /* ---- the hidden way in ----
+     No link, no button, nothing on the page. Either put #team on the
+     address, or type the word "team" anywhere outside a text box. A
+     respondent will never do either by accident; a teammate who is told
+     once will not forget. */
+  function openTeam(show){
+    $("teampanel").hidden = !show;
+    if (show) $("teampanel").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  if (/(^|#)team$/i.test(window.location.hash)) openTeam(true);
+  window.addEventListener("hashchange", function(){
+    if (/(^|#)team$/i.test(window.location.hash)) openTeam(true);
+  });
+  var typed = "";
+  document.addEventListener("keydown", function(ev){
+    var t = ev.target, tag = t && t.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || (t && t.isContentEditable)) return;
+    if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+    if (!/^[a-z]$/i.test(ev.key)) { typed = ""; return; }
+    typed = (typed + ev.key.toLowerCase()).slice(-4);
+    if (typed === "team") { typed = ""; openTeam(true); }
+  });
+  $("closeteam").addEventListener("click", function(){
+    openTeam(false);
+    if (window.location.hash) {
+      window.location.hash = "";
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  /* ============================================== team tools */
+  /* People paste whatever they were sent: one object, several objects in
+     a row, a JSON array, or an object per line. Scan for balanced braces
+     instead of trusting the shape. */
+  function harvest(text){
+    var out = [], i = 0, s = String(text || "");
+    try {
+      var whole = JSON.parse(s);
+      if (Array.isArray(whole)) return whole.filter(function(o){ return o && typeof o === "object"; });
+      if (whole && typeof whole === "object") return [whole];
+    } catch (e) { /* not one clean document; walk it */ }
+    while (i < s.length) {
+      if (s.charAt(i) !== "{") { i++; continue; }
+      var depth = 0, inStr = false, escNext = false, j = i;
+      for (; j < s.length; j++) {
+        var ch = s.charAt(j);
+        if (escNext) { escNext = false; continue; }
+        if (ch === "\\" && inStr) { escNext = true; continue; }
+        if (ch === '"') { inStr = !inStr; continue; }
+        if (inStr) continue;
+        if (ch === "{") depth++;
+        else if (ch === "}") { depth--; if (depth === 0) break; }
+      }
+      if (depth !== 0) break;
+      try {
+        var o = JSON.parse(s.slice(i, j + 1));
+        if (o && typeof o === "object") out.push(o);
+      } catch (e) { /* skip the fragment, keep going */ }
+      i = j + 1;
+    }
+    return out;
+  }
+
+  /* Exactly the Responses tab's column order, A to Q. The two auto
+     columns sit to the right of these, so one paste at A5 never lands on
+     a formula. */
+  var TSV_COLS = ["id", "s1_field", "s1a_other", "s2_role", "s2a_other", "s3_products",
+    "s4_years", "q1_first", "q1_second", "q1_third", "q2_missing", "q3_killer",
+    "q3a_other", "q4_call", "q4_email"];
+  function cell(v){
+    return String(v == null ? "" : v).replace(/[\t\r\n]+/g, " ").trim();
+  }
+  function problems(o){
+    var p = [];
+    ["s1_field", "s2_role", "s3_products", "s4_years", "q3_killer"].forEach(function(k){
+      if (!cell(o[k])) p.push("no " + k.split("_")[0].toUpperCase());
+    });
+    var t = [o.q1_first, o.q1_second, o.q1_third].map(cell).filter(Boolean);
+    if (t.length < 3) p.push("Q1 incomplete");
+    else if (t[0] === t[1] || t[0] === t[2] || t[1] === t[2]) p.push("Q1 duplicate");
+    t.forEach(function(n){
+      if (n && FNAMES.indexOf(n) < 0) p.push("Q1 unknown factor");
+    });
+    return p;
+  }
+
+  var merged = [];
+  function combine(extra){
+    var found = harvest($("inbox").value).concat(extra || []);
+    merged = found.filter(function(o){
+      /* Loose on purpose: anything carrying the marker, or just the
+         shape of an answer, is read. A response is too expensive to
+         throw away over a missing field. */
+      return o && (o.tool === "adoption-survey" || o.q1_first || o.s1_field);
+    });
+    var tally = {}, dev = {}, oth = {}, wtd = {}, usable = 0, usableDev = 0;
+    FNAMES.forEach(function(n){ tally[n] = 0; dev[n] = 0; oth[n] = 0; wtd[n] = 0; });
+    var rows = [], bad = 0;
+    merged.forEach(function(o, k) {
+      o.id = o.id || ("R" + (k + 1));
+      var p = problems(o);
+      if (p.length) bad++;
+      rows.push({ o: o, p: p });
+      if (p.length) return;
+      usable++;
+      var isDev = cell(o.s1_field) === DEVICE;
+      if (isDev) usableDev++;
+      [o.q1_first, o.q1_second, o.q1_third].forEach(function(n, pos){
+        n = cell(n);
+        if (tally[n] === undefined) return;
+        tally[n]++;
+        wtd[n] += 3 - pos;          /* 3 for first, 2 for second, 1 for third */
+        if (isDev) dev[n]++; else oth[n]++;
+      });
+    });
+
+    var h = '<p class="tiny" style="margin-top:14px"><b>' + merged.length +
+      "</b> response" + (merged.length === 1 ? "" : "s") + " read, <b>" + usable +
+      "</b> usable" + (bad ? ", <b>" + bad + "</b> needing a look" : "") +
+      (usable ? " · " + usableDev + " in devices, " + (usable - usableDev) +
+        " in other fields" : "") + ".</p>";
+
+    if (bad) {
+      h += '<table class="sum"><tr><th>Response</th><th>Needs a look</th></tr>';
+      rows.forEach(function(r){
+        if (!r.p.length) return;
+        h += "<tr><td>" + esc(r.o.id) + "</td><td>" + esc(r.p.join(", ")) + "</td></tr>";
+      });
+      h += "</table>";
+    }
+    if (usable) {
+      /* Count first, then the 3-2-1 score, exactly as the workbook's
+         Analysis tab does — otherwise two factors naming the same number
+         of people sit in whatever order the list happened to be in, and
+         the one more people ranked FIRST can end up below the other. */
+      var order = FNAMES.slice().sort(function(a, b){
+        return (tally[b] - tally[a]) || (wtd[b] - wtd[a]) ||
+               FNAMES.indexOf(a) - FNAMES.indexOf(b);
+      });
+      h += '<table class="sum"><tr><th>Factor</th><th>Tier</th><th>In top three</th>' +
+           "<th>Share</th><th>Weighted</th><th>Devices</th><th>Other</th></tr>";
+      order.forEach(function(n){
+        var w = FACTORS[FNAMES.indexOf(n)][2], hi = w === 15;
+        h += "<tr><td>" + esc(n) + '</td><td><span class="pill' + (hi ? " hi" : "") +
+          '">' + (hi ? "High" : "Low") + "</span></td>" +
+          '<td class="n">' + tally[n] + "</td>" +
+          '<td class="n">' + Math.round(tally[n] / usable * 100) + "%</td>" +
+          '<td class="n">' + wtd[n] + "</td>" +
+          '<td class="n">' + dev[n] + "</td>" +
+          '<td class="n">' + oth[n] + "</td></tr>";
+      });
+      h += "</table>";
+      h += '<p class="tiny">The four High factors are the ones the client weighted at 15. ' +
+        "If they do not sit at the top of this table, that is the finding. The workbook's " +
+        "Analysis tab does the same arithmetic once the rows are pasted in.</p>";
+    }
+    $("sumout").innerHTML = h;
+    var on = merged.length > 0;
+    $("copytsv").hidden = !on;
+    $("copyall").hidden = !on;
+    $("dlall").hidden = !on;
+  }
+
+  function tsv(){
+    return merged.map(function(o){
+      return TSV_COLS.map(function(k){ return cell(o[k]); }).join("\t");
+    }).join("\n");
+  }
+  $("combine").addEventListener("click", function(){ combine([]); });
+  $("copytsv").addEventListener("click", function(){ copyText(tsv(), $("said2")); });
+  $("copyall").addEventListener("click", function(){
+    copyText(JSON.stringify(merged, null, 2), $("said2"));
+  });
+  $("dlall").addEventListener("click", function(){
+    download(JSON.stringify(merged, null, 2), "criteria-survey-responses.json",
+             "application/json");
+  });
+  $("files").addEventListener("change", function(ev){
+    var fs = Array.prototype.slice.call(ev.target.files || []);
+    if (!fs.length) return;
+    var got = [], left = fs.length;
+    fs.forEach(function(file){
+      var fr = new FileReader();
+      fr.onload = function(){
+        got = got.concat(harvest(String(fr.result || "")));
+        if (--left === 0) combine(got);
+      };
+      fr.onerror = function(){ if (--left === 0) combine(got); };
+      fr.readAsText(file);
+    });
+    ev.target.value = "";
+  });
+})();
+</script>
+</body>
+</html>
