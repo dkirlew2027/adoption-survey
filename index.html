@@ -301,13 +301,14 @@ diagnostics, digital health, etc.</p>
 <!-- ================================================= done -->
 <section class="done" id="donepanel" hidden>
   <div class="sh"><span class="n">Done</span><h2>Thank you — that is everything</h2></div>
-  <p class="sub">Save your answers as a file and send it to the address below. Nothing
-  has been transmitted and nothing will be.</p>
+  <p class="sub">One tap and your answers go into an email, already written. Nothing has
+  been transmitted and nothing will be until you press send.</p>
   <div class="btns">
-    <button type="button" class="btn main" id="savebtn">Save my answers</button>
-    <button type="button" class="btn" id="mailbtn" hidden>Open an email</button>
+    <button type="button" class="btn main" id="mailbtn" hidden>Email my answers</button>
+    <button type="button" class="btn" id="savebtn">Save as a file instead</button>
     <button type="button" class="btn" id="backbtn">Change an answer</button>
   </div>
+  <div class="saved" id="mailed" hidden></div>
   <div class="saved" id="saved" hidden></div>
   <div class="sendto" id="sendto" hidden>
     <span class="sendlab">Send it to</span>
@@ -316,9 +317,9 @@ diagnostics, digital health, etc.</p>
     <span class="said" id="said3" hidden>Copied.</span>
   </div>
   <p class="tiny" id="fallbackwrap" style="margin-top:10px">
-    Nothing happened, or you cannot find the file?
-    <button type="button" class="linky" id="showtext">Show my answers instead</button>
-    — then copy them into your reply.
+    No email opened, or you would rather paste it yourself?
+    <button type="button" class="linky" id="showtext">Show my answers</button>
+    — then copy them into a message to the address above.
   </p>
   <div id="textwrap" hidden>
     <textarea id="plaintext" readonly rows="12" style="margin-top:4px"></textarea>
@@ -335,11 +336,12 @@ diagnostics, digital health, etc.</p>
      #team on the address, or by typing the word "team". ============ -->
 <section id="teampanel" hidden>
   <div class="sh"><span class="n">Team only</span><h2>Combine the responses</h2></div>
-  <p class="sub">Drop in the files people sent back, or paste their contents. You get a
-  tally and a block to paste into row 5 of the Responses tab. Runs entirely in this page.</p>
+  <p class="sub">Paste the emails people sent, or drop in the files. Several at once is
+  fine. You get a tally and a block to paste into row 5 of the Responses tab. Runs
+  entirely in this page.</p>
   <p class="tiny"><label class="btn" style="display:inline-block">Choose the files people sent
     <input type="file" id="files" accept=".txt,.json,text/plain,application/json" multiple hidden></label></p>
-  <textarea id="inbox" style="min-height:110px" placeholder="…or paste their contents here."></textarea>
+  <textarea id="inbox" style="min-height:110px" placeholder="Paste one or more emails here — headers, quote marks and all."></textarea>
   <div class="btns" style="margin-top:10px">
     <button type="button" class="btn main" id="combine">Combine</button>
     <button type="button" class="btn" id="copytsv" hidden>Copy for the workbook</button>
@@ -626,6 +628,13 @@ diagnostics, digital health, etc.</p>
     }
     $("submitnote").textContent = "Nothing is sent until you send it yourself.";
     finished = payload();
+    /* Tapping the address should do the same thing as the button, so
+       point it at the composed email now that there are answers to
+       compose. */
+    if (SEND_TO) {
+      var pick = pickMail();
+      $("addrlink").setAttribute("href", pick.href || ("mail" + "to:" + SEND_TO));
+    }
     $("donepanel").hidden = false;
     $("donepanel").scrollIntoView({ behavior: "smooth", block: "start" });
   });
@@ -773,36 +782,115 @@ diagnostics, digital health, etc.</p>
      nothing at all in a fair number of in-app browsers and the page
      cannot tell whether it worked. An address somebody can read, copy
      or type never fails. */
+  /* A mail link carries its whole body in the address bar, and clients
+     cut it off somewhere between about two and four thousand
+     characters — silently, mid-word, with no error. So the email body
+     is the short form: the answers in plain words, then one compact
+     line of data for the team to read back. Empty answers are left out
+     entirely, which is most of them for most people. */
+  var MAIL_MAX = 1900;        // characters of encoded href, with headroom
+
+  /* The labels are the data format. They are unique on purpose and the
+     reader on the other end matches them exactly, so the email a
+     person sends is the same thing the team reads back — no second
+     block of machine text riding along underneath, which a respondent
+     should never have been asked to look at or leave alone. Change a
+     label here and you must change MAIL_FIELDS with it. */
+  var MAIL_FIELDS = {
+    "Industry": "s1_field",
+    "Industry, other": "s1a_other",
+    "Role": "s2_role",
+    "Role, other": "s2a_other",
+    "Products taken to market": "s3_products",
+    "Years in the industry": "s4_years",
+    "Missing factor": "q2_missing",
+    "What stopped a sound product": "q3_killer",
+    "What stopped it, other": "q3a_other",
+    "Open to a 20-minute call": "q4_call",
+    "Best email": "q4_email"
+  };
+  var MAIL_HEAD = "The three that decide adoption:";
+  /* A typed answer can contain line breaks, and a line break would
+     break the one-answer-per-line shape the reader depends on. */
+  function flat(v){ return String(v == null ? "" : v).replace(/\s*[\r\n]+\s*/g, " / ").trim(); }
+
+  function mailBody(d){
+    var L = [], by = {};
+    Object.keys(MAIL_FIELDS).forEach(function (lab) { by[MAIL_FIELDS[lab]] = lab; });
+    function line(key){
+      var v = flat(d[key]);
+      if (v) L.push(by[key] + ": " + v);
+    }
+    ["s1_field", "s1a_other", "s2_role", "s2a_other", "s3_products",
+     "s4_years"].forEach(line);
+    L.push("");
+    L.push(MAIL_HEAD);
+    L.push("1. " + flat(d.q1_first));
+    L.push("2. " + flat(d.q1_second));
+    L.push("3. " + flat(d.q1_third));
+    L.push("");
+    ["q2_missing", "q3_killer", "q3a_other", "q4_call", "q4_email"].forEach(line);
+    return L.join("\r\n");
+  }
   function mailHref(){
-    var body = "My survey answers are attached.\r\n\r\n" +
-               "(If the file did not attach, it is saved as " +
-               (finished ? fileName(finished) : "the survey file") +
-               " — or the answers are pasted below.)\r\n\r\n";
     return "mail" + "to:" + SEND_TO +
-      "?subject=" + encodeURIComponent("Criteria survey response") +
-      "&body=" + encodeURIComponent(body);
+      "?subject=" + encodeURIComponent("Adoption survey response") +
+      "&body=" + encodeURIComponent(mailBody(finished || {}));
+  }
+  /* Two outcomes, decided before anything opens. Either it fits, or a
+     mail client would cut it off mid-answer without saying so — and a
+     truncated email that looks sent is worse than no email. */
+  function pickMail(){
+    var href = mailHref();
+    return href.length <= MAIL_MAX
+      ? { href: href, how: "full" }
+      : { href: null, how: "toolong" };
   }
   if (SEND_TO) {
     $("addr").textContent = SEND_TO;
     $("sendto").hidden = false;
-    $("addrlink").setAttribute("href", mailHref());
+    $("addrlink").setAttribute("href", "mail" + "to:" + SEND_TO);
     $("addrlink").addEventListener("click", function(){
-      this.setAttribute("href", mailHref());
+      var pick = pickMail();
+      this.setAttribute("href", pick.href || ("mail" + "to:" + SEND_TO));
     });
     $("copyaddr").addEventListener("click", function(){
       copyText(SEND_TO, $("said3"));
     });
     var mb = $("mailbtn");
     mb.hidden = false;
-    mb.textContent = "Open an email to send it";
     mb.addEventListener("click", function(){
+      var pick = pickMail();
+      if (pick.how === "toolong") {
+        $("mailed").innerHTML =
+          "<b>Your answers are too long to fit in an email link.</b> Mail apps cut those " +
+          "off without warning, and we would rather not lose half your answer. Use " +
+          "<b>Save as a file instead</b> and attach it, or copy the text below into a " +
+          "message. Both carry everything.";
+        $("mailed").className = "saved warn";
+        $("mailed").hidden = false;
+        revealText();
+        $("textwrap").scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
       /* A real link click, not a location assignment: phones and some
          desktop browsers ignore the latter from script. */
       var a = document.createElement("a");
-      a.href = mailHref();
+      a.href = pick.href;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+      /* The page cannot tell whether the mail app opened — nothing
+         reports back. So say what should have happened and leave the
+         other routes in plain view rather than claiming success. */
+      $("mailed").innerHTML =
+        "<b>Your email should have opened</b> with the answers already written in it. " +
+        "Press send and you are done." +
+        " If nothing opened, your browser may not be allowed to start a mail app: use " +
+        "<b>Save as a file instead</b> and attach it, or copy the text below.";
+      $("mailed").className = "saved";
+      $("mailed").hidden = false;
+      revealText();
     });
   }
 
@@ -910,6 +998,39 @@ diagnostics, digital health, etc.</p>
     return out;
   }
 
+  /* The other half of the email format. A pasted email is read by the
+     same labels the page wrote, so there is one format rather than a
+     readable one for people and a machine one underneath. Anything it
+     cannot place is left out, and the row shows up as incomplete
+     rather than silently wrong. */
+  function readEmails(text){
+    var lines = String(text || "").split(/\r?\n/);
+    var blocks = [], cur = null;
+    lines.forEach(function (raw) {
+      var ln = raw.replace(/^[>\s]+/, "").trim();     /* mail clients quote with > */
+      if (/^Industry:/.test(ln)) { cur = []; blocks.push(cur); }
+      if (cur) cur.push(ln);
+    });
+    return blocks.map(function (bl) {
+      var o = { tool: "adoption-survey", version: 1 }, seen = 0;
+      bl.forEach(function (ln) {
+        var rank = ln.match(/^([123])\.\s+(.+)$/);
+        if (rank) {
+          o[["q1_first", "q1_second", "q1_third"][+rank[1] - 1]] = rank[2].trim();
+          seen++;
+          return;
+        }
+        var at = ln.indexOf(":");
+        if (at < 1) return;
+        var key = MAIL_FIELDS[ln.slice(0, at).trim()];
+        if (!key) return;
+        o[key] = ln.slice(at + 1).trim();
+        seen++;
+      });
+      return seen ? o : null;
+    }).filter(Boolean);
+  }
+
   /* Exactly the Responses tab's column order, A to Q. The two auto
      columns sit to the right of these, so one paste at A5 never lands on
      a formula. */
@@ -935,7 +1056,12 @@ diagnostics, digital health, etc.</p>
 
   var merged = [];
   function combine(extra){
-    var found = harvest($("inbox").value).concat(extra || []);
+    /* JSON first, because a saved file carries it and it is exact.
+       Anything else is read as pasted email text. */
+    var raw = $("inbox").value;
+    var found = harvest(raw);
+    if (!found.length) found = readEmails(raw);
+    found = found.concat(extra || []);
     merged = found.filter(function(o){
       /* Loose on purpose: anything carrying the marker, or just the
          shape of an answer, is read. A response is too expensive to
@@ -1031,7 +1157,9 @@ diagnostics, digital health, etc.</p>
     fs.forEach(function(file){
       var fr = new FileReader();
       fr.onload = function(){
-        got = got.concat(harvest(String(fr.result || "")));
+        var txt = String(fr.result || "");
+        var one = harvest(txt);
+        got = got.concat(one.length ? one : readEmails(txt));
         if (--left === 0) combine(got);
       };
       fr.onerror = function(){ if (--left === 0) combine(got); };
