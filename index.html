@@ -247,10 +247,11 @@ diagnostics, digital health, etc.</p>
 <!-- ================================================= Q1 -->
 <section>
   <div class="sh"><span class="n">Part 2</span><h2>The main question</h2></div>
-  <p class="sub">Of the eight below, which three do the most to decide whether a new
-  medical product actually gets adopted?</p>
+  <p class="sub">Of the eight below, which do the most to decide whether a new medical
+  product actually gets adopted? Up to three, best first — fewer is fine.</p>
   <div class="q" data-q="q1" style="padding-top:0">
-    <p class="pickstate" id="pickstate">Tap <b>three</b> factors, best first.</p>
+    <p class="pickstate" id="pickstate">Tap up to <b>three</b>, best first. One or two
+    is fine if that is all you are sure of.</p>
     <div class="ranks" id="ranks"></div>
     <div class="err">Please pick exactly three.</div>
   </div>
@@ -387,20 +388,26 @@ diagnostics, digital health, etc.</p>
   var OTHER_FIELD = "Other — please specify";
   var OTHER_ROLE = "Other — please specify";
   var SOMETHING = "Something else — please specify";
+  /* Every closed list ends with a way out. A forced answer from someone
+     who does not know is worse than no answer: it is noise wearing the
+     costume of data. A question left blank is recorded as this too, so
+     a skipped question and a declined one read the same in the tally —
+     which is what they are. */
+  var NA = "Prefer not to say";
 
   var LISTS = {
     s1_field: [DEVICE, "Pharmaceuticals or biotech", "Diagnostics or laboratory",
       "Digital health or health IT", "Hospital or health system (provider side)",
-      "Payer or health plan", "Consulting, investment or academia", OTHER_FIELD],
+      "Payer or health plan", "Consulting, investment or academia", OTHER_FIELD, NA],
     s2_role: ["Regulatory affairs or quality", "Clinical affairs or medical",
       "Market access or reimbursement", "Commercial, sales or marketing",
       "R&D, engineering or manufacturing", "Business development or strategy",
-      "Investor", "Founder or general management", OTHER_ROLE],
-    s3_products: ["0", "1", "2–3", "4–9", "10 or more"],
+      "Investor", "Founder or general management", OTHER_ROLE, NA],
+    s3_products: ["0", "1", "2–3", "4–9", "10 or more", NA],
     s4_years: ["Under 3 years", "3 to under 8 years", "8 to under 15 years",
-      "15 years or more"],
-    q3_killer: FNAMES.concat([SOMETHING, "I have not seen one"]),
-    q4_call: ["Yes", "No"]
+      "15 years or more", NA],
+    q3_killer: FNAMES.concat([SOMETHING, "I have not seen one", NA]),
+    q4_call: ["Yes", "No", NA]
   };
   /* Questions where more than one answer is honest. A person who watched
      a good product die rarely blames one thing, and forcing a single
@@ -411,7 +418,10 @@ diagnostics, digital health, etc.</p>
     s1_field: OTHER_FIELD, s2_role: OTHER_ROLE, q3_killer: SOMETHING,
     q4_call: "Yes"
   };
-  var REQUIRED = ["s1_field", "s2_role", "s3_products", "s4_years", "q1", "q3_killer"];
+  /* Nothing here is mandatory. Somebody who knows one of these cold and
+     the rest not at all should be able to answer that one and leave.
+     This list is only what the progress bar counts. */
+  var COUNTED = ["s1_field", "s2_role", "s3_products", "s4_years", "q1", "q3_killer"];
 
   /* ---- where replies go ----
      This page is published publicly, so the address is deliberately not
@@ -556,25 +566,25 @@ diagnostics, digital health, etc.</p>
       badge.textContent = at > -1 ? String(at + 1) : "·";
       c.setAttribute("aria-pressed", at > -1 ? "true" : "false");
     });
-    var left = 3 - picks.length;
     $("pickstate").innerHTML = picks.length === 0
-      ? "Tap <b>three</b> factors, best first."
-      : picks.length === 3
-        ? "<b>1.</b> " + esc(picks[0]) + " &nbsp;·&nbsp; <b>2.</b> " + esc(picks[1]) +
-          " &nbsp;·&nbsp; <b>3.</b> " + esc(picks[2]) +
-          " &nbsp;—&nbsp; tap one again to change it."
-        : "<b>" + left + "</b> more to pick.";
+      ? "Tap up to <b>three</b>, best first. One or two is fine if that is all " +
+        "you are sure of."
+      : picks.map(function (n, i) {
+          return "<b>" + (i + 1) + ".</b> " + esc(n);
+        }).join(" &nbsp;\u00b7&nbsp; ") +
+        " &nbsp;\u2014&nbsp; tap one again to change it" +
+        (picks.length < 3 ? ", or add another." : ".");
   }
   paintPicks();
 
   /* ---------------------------------------------- progress */
   function done(name){
-    return name === "q1" ? picks.length === 3 : !!answers[name];
+    return name === "q1" ? picks.length > 0 : !!answers[name];
   }
   function tick(){
-    var n = REQUIRED.filter(done).length;
-    $("count").textContent = n + " of " + REQUIRED.length + " answered";
-    $("fill").style.width = Math.round(n / REQUIRED.length * 100) + "%";
+    var n = COUNTED.filter(done).length;
+    $("count").textContent = n + " of " + COUNTED.length + " answered";
+    $("fill").style.width = Math.round(n / COUNTED.length * 100) + "%";
   }
   tick();
 
@@ -589,45 +599,54 @@ diagnostics, digital health, etc.</p>
   /* ---------------------------------------------- submit */
   function val(id){ var e = $(id); return e ? String(e.value || "").trim() : ""; }
 
+  /* A closed question left blank is recorded as the same thing somebody
+     would have chosen from the list, so the tally never has to guess
+     whether an empty cell means "declined" or "the page broke". The
+     open questions stay empty when empty — there is nothing to decline. */
+  function closed(v){ return String(v || "").trim() || NA; }
+
   function payload(){
     return {
       tool: "adoption-survey",
       version: 1,
       submittedAt: new Date().toISOString(),
       secondsTaken: Math.round((Date.now() - started) / 1000),
-      s1_field: answers.s1_field || "",
+      s1_field: closed(answers.s1_field),
       s1a_other: val("s1a"),
-      s2_role: answers.s2_role || "",
+      s2_role: closed(answers.s2_role),
       s2a_other: val("s2a"),
-      s3_products: answers.s3_products || "",
-      s4_years: answers.s4_years || "",
+      s3_products: closed(answers.s3_products),
+      s4_years: closed(answers.s4_years),
       q1_first: picks[0] || "",
       q1_second: picks[1] || "",
       q1_third: picks[2] || "",
       q2_missing: val("q2"),
-      q3_killer: answers.q3_killer || "",
+      q3_killer: closed(answers.q3_killer),
       q3a_other: val("q3a"),
-      q4_call: answers.q4_call || "",
+      q4_call: closed(answers.q4_call),
       q4_email: val("q4email")
     };
   }
 
+  var nudged = false;
   $("form").addEventListener("submit", function(ev){
     ev.preventDefault();
-    var missing = REQUIRED.filter(function(n){ return !done(n); });
-    if (missing.length) {
-      missing.forEach(function(n){
-        var q = document.querySelector('[data-q="' + n + '"]');
-        if (!q) return;
+    /* Nothing blocks a submission. Q1 gets one gentle word, once,
+       because it is the question the whole survey exists to ask and
+       leaving it blank is more often a scroll-past than a decision.
+       Press finish again and it goes as it is — their call, not ours. */
+    if (!picks.length && !nudged) {
+      nudged = true;
+      var q = document.querySelector('[data-q="q1"]');
+      if (q) {
         q.classList.add("bad");
         var e = q.querySelector(".err");
-        if (e) e.classList.add("on");
-      });
-      var first = document.querySelector('[data-q="' + missing[0] + '"]');
-      if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
-      $("submitnote").textContent = missing.length === 1
-        ? "One question still needs an answer."
-        : missing.length + " questions still need an answer.";
+        if (e) { e.textContent = "This is the one question the survey is really " +
+                 "asking. Pick one if you can \u2014 or press finish again to skip it."; 
+                 e.classList.add("on"); }
+        q.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      $("submitnote").textContent = "Press finish again to send it without this one.";
       return;
     }
     $("submitnote").textContent = "Nothing is sent until you send it yourself.";
@@ -670,10 +689,14 @@ diagnostics, digital health, etc.</p>
     line("Products taken to market", d.s3_products);
     line("Years in the industry", d.s4_years);
     L.push("");
-    L.push("  The three factors that most decide whether a product gets adopted:");
-    L.push("    1. " + d.q1_first);
-    L.push("    2. " + d.q1_second);
-    L.push("    3. " + d.q1_third);
+    var ranked = [d.q1_first, d.q1_second, d.q1_third]
+      .map(function (x) { return String(x || "").trim(); }).filter(Boolean);
+    if (ranked.length) {
+      L.push("  The factors that most decide whether a product gets adopted:");
+      ranked.forEach(function (n, i) { L.push("    " + (i + 1) + ". " + n); });
+    } else {
+      L.push("  No factors ranked.");
+    }
     L.push("");
     line("A factor missing from the list", d.q2_missing);
     line("What stopped a sound product", d.q3_killer);
@@ -827,11 +850,12 @@ diagnostics, digital health, etc.</p>
     }
     ["s1_field", "s1a_other", "s2_role", "s2a_other", "s3_products",
      "s4_years"].forEach(line);
-    L.push("");
-    L.push(MAIL_HEAD);
-    L.push("1. " + flat(d.q1_first));
-    L.push("2. " + flat(d.q1_second));
-    L.push("3. " + flat(d.q1_third));
+    var ranked = [d.q1_first, d.q1_second, d.q1_third].map(flat).filter(Boolean);
+    if (ranked.length) {
+      L.push("");
+      L.push(MAIL_HEAD);
+      ranked.forEach(function (n, i) { L.push((i + 1) + ". " + n); });
+    }
     L.push("");
     ["q2_missing", "q3_killer", "q3a_other", "q4_call", "q4_email"].forEach(line);
     return L.join("\r\n");
@@ -1049,9 +1073,15 @@ diagnostics, digital health, etc.</p>
     ["s1_field", "s2_role", "s3_products", "s4_years", "q3_killer"].forEach(function(k){
       if (!cell(o[k])) p.push("no " + k.split("_")[0].toUpperCase());
     });
+    /* One or two picks is an answer. Only an empty Q1, or the same
+       factor named twice, stops a row counting. */
     var t = [o.q1_first, o.q1_second, o.q1_third].map(cell).filter(Boolean);
-    if (t.length < 3) p.push("Q1 incomplete");
-    else if (t[0] === t[1] || t[0] === t[2] || t[1] === t[2]) p.push("Q1 duplicate");
+    if (!t.length) p.push("no Q1");
+    else {
+      var seen = {};
+      t.forEach(function (n) { seen[n] = (seen[n] || 0) + 1; });
+      if (Object.keys(seen).length !== t.length) p.push("Q1 duplicate");
+    }
     t.forEach(function(n){
       if (n && FNAMES.indexOf(n) < 0) p.push("Q1 unknown factor");
     });
